@@ -5,68 +5,78 @@ namespace Arth\Util;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
+use Throwable;
 
-class TimeMachine
+class TimeMachine implements TimeMachineInterface
 {
   /** @var DateTimeInterface */
-  protected $dt = null;
+  protected $dt;
   /** @var float unix timestamp with useconds */
-  protected $lastSetTime = null;
+  protected $lastSetTime;
   /** @var DateTimeZone */
   protected $tz;
 
-  public function setNow(?DateTimeInterface $now = null)
+  /** @var TimeMachine[] */
+  protected static $instances = [];
+  public static function getInstance($id = 'default'): TimeMachine
+  {
+    return self::$instances[$id] ??
+        (static::$instances[$id] = new static);
+  }
+
+  public function setNow(?DateTimeInterface $now = null): void
   {
     $this->dt = $now;
-    if ($this->lastSetTime) $this->lastSetTime = microtime(true);
-
-    return $now;
+    if ($this->lastSetTime) {
+      $this->lastSetTime = microtime(true);
+    }
   }
   /**
-   * @return \DateTimeImmutable|\DateTime
-   * @throws \Exception
+   * @inheritDoc
    */
   public function getNow(): DateTimeInterface
   {
-    $now = $this->dt ?: new DateTimeImmutable('now', $this->tz);
+    $now = $this->calcNow();
+
     if (!$this->lastSetTime) {
       return $now;
     }
-    $realNow = microtime(true);
-    $diff = $realNow - $this->lastSetTime;
+    $realNow           = microtime(true);
+    $diff              = $realNow - $this->lastSetTime;
     $this->lastSetTime = $realNow;
 
-    return self::ts2date(self::date2ts($now)+$diff, $this->tz);
+    return self::ts2date((int)(self::date2ts($now)) + $diff, $this->tz);
   }
 
-  /**
-   * @param bool $mode
-   *   - true(default): each setted now value will be returned by getter as is
-   *   - false: getter will increment time by passed time from setter call moment
-   */
-  public function setFreezedMode(bool $mode = true) { $this->lastSetTime = $mode ? null : microtime(true); }
+  /** @inheritDoc */
+  public function setFrozenMode(bool $mode = true): void { $this->lastSetTime = $mode ? null : microtime(true); }
+  /** @deprecated - Renamed to setFrozenMode */
+  public function setFreezedMode(bool $mode = true): void { $this->setFrozenMode($mode); }
 
-  /** @var TimeMachine[] */
-  protected static $instances = [];
-  public static function getInstance($id = 'default')
-  {
-    return self::$instances[$id] ??
-      (static::$instances[$id] = new static);
-  }
-
-  public static function ts2date($ts, ?DateTimeZone $tz = null)
+  public static function ts2date($ts, ?DateTimeZone $tz = null): DateTimeInterface
   {
     $dts = floor($ts);                             // integer part
     $uts = number_format($ts - $dts, 6, '.', '');  // fraction part
 
     return DateTimeImmutable::createFromFormat('U\+0.u', "$dts+$uts", $tz);
   }
-  public static function date2ts(DateTimeInterface $dt)
+  public static function date2ts(DateTimeInterface $dt): string
   {
     $dts = (int) $dt->format('U');
     $uts = (float) $dt->format('0.u');
     return number_format($dts + $uts, 6, '.', '');
   }
+
   public function getTz(): ?DateTimeZone{return $this->tz; }
   public function setTz(?DateTimeZone $tz = null): void{$this->tz = $tz; }
+
+  protected function calcNow(): DateTimeInterface
+  {
+    try {
+      return $this->dt ?? new DateTimeImmutable('now', $this->getTz());
+    } catch (Throwable $ex) {
+      // 'now' is valid time for constructor, so, just ignore Exception
+    }
+    return null;
+  }
 }

@@ -3,6 +3,7 @@
 namespace Test;
 
 use Arth\Util\TimeMachine;
+use DateTime;
 use PHPUnit\Framework\TestCase;
 
 class TimeMachineTest extends TestCase
@@ -10,7 +11,7 @@ class TimeMachineTest extends TestCase
   /** @var TimeMachine */
   private $tm;
 
-  const FORMAT = 'Y-m-d H:i:s.u';
+  public const FORMAT = 'Y-m-d H:i:s.u';
 
   protected function setUp()
   {
@@ -20,20 +21,20 @@ class TimeMachineTest extends TestCase
   /**
    * @dataProvider dts
    */
-  public function testDateFromTimestamp($ts, $date)
+  public function testDateFromTimestamp($ts, $date): void
   {
     $this->assertEquals($date, TimeMachine::ts2date($ts)->format(self::FORMAT));
   }
   /**
    * @dataProvider dts
    */
-  public function testTimestampFromDate($ts, $date)
+  public function testTimestampFromDate($ts, $date): void
   {
-    $dt = \DateTime::createFromFormat(self::FORMAT, $date);
+    $dt = DateTime::createFromFormat(self::FORMAT, $date);
     $this->assertEquals($ts, TimeMachine::date2ts($dt));
   }
 
-  public function dts()
+  public function dts(): array
   {
     return [
       ['-128649659.999998', '1965-12-03 23:59:00.000002'],
@@ -42,27 +43,29 @@ class TimeMachineTest extends TestCase
     ];
   }
 
-  public function testFreezedMode()
+  public function testFrozenMode(): void
   {
     $date = '1965-12-03 23:59:59.000000';
-    $this->tm->setFreezedMode(true);
-    $this->tm->setNow(new \DateTime($date));
+    $this->tm->setFrozenMode(true);
+    $this->tm->setNow(new DateTime($date));
     usleep(100);
     $this->assertEquals($date, $this->tm->getNow()->format(self::FORMAT));
   }
-  public function testUnfreezedMode()
+  public function testUnfrozenMode(): void
   {
     $date = '1965-12-03 23:59:00.000000';
-    $this->tm->setFreezedMode(false);
-    $this->tm->setNow(new \DateTime($date));
-    usleep(100);
-    $this->assertNotEquals($date, $this->tm->getNow()->format(self::FORMAT));
+    $this->tm->setFrozenMode(false);
+    $this->tm->setNow(new DateTime($date));
+    usleep(0); // Schedule itself takes near 50us
+
+    $later = $this->tm->getNow()->format(self::FORMAT);
+    $this->assertGreaterThan($date, $later);
   }
 
-  public function testAkaSingletones()
+  public function testAkaSingletons(): void
   {
-    $tm = TimeMachine::getInstance('some');
-    $this->assertSame($tm, TimeMachine::getInstance('some'));
-    $this->assertNotSame($tm, TimeMachine::getInstance('other'));
+    $subj = TimeMachine::getInstance('some');
+    $this->assertSame($subj, TimeMachine::getInstance('some'));
+    $this->assertNotSame($subj, TimeMachine::getInstance('other'));
   }
 }
