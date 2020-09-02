@@ -49,8 +49,6 @@ class TimeMachine implements TimeMachineInterface
 
   /** @inheritDoc */
   public function setFrozenMode(bool $mode = true): void { $this->lastSetTime = $mode ? null : microtime(true); }
-  /** @deprecated - Renamed to setFrozenMode */
-  public function setFreezedMode(bool $mode = true): void { $this->setFrozenMode($mode); }
 
   public static function ts2date($ts, ?DateTimeZone $tz = null): DateTimeInterface
   {
