@@ -33,6 +33,12 @@ class TimeMachine implements TimeMachineInterface
       $this->lastSetTime = microtime(true);
     }
   }
+
+  public function setNowFromFormatString(string $time, string $format = 'Y-m-d H:i:s'): void
+  {
+    $this->setNow(DateTimeImmutable::createFromFormat($format, $time, $this->getTz()));
+  }
+
   /**
    * @inheritDoc
    */

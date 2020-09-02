@@ -12,6 +12,8 @@ interface TimeMachineInterface
   public static function getInstance($id = 'default'): TimeMachine;
 
   public function setNow(?DateTimeInterface $now = null): void;
+  public function setNowFromFormatString(string $time, string $format = 'Y-m-d H:i:s'): void;
+
   /** @return DateTimeImmutable|DateTime - depends on setNow provided values */
   public function getNow(): DateTimeInterface;
   /**
