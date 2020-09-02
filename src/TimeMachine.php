@@ -15,6 +15,9 @@ class TimeMachine implements TimeMachineInterface
   /** @var DateTimeZone */
   protected $tz;
 
+  /** Use getInstance method instead of new */
+  protected function __construct() { }
+
   /** @var TimeMachine[] */
   protected static $instances = [];
   public static function getInstance($id = 'default'): TimeMachine

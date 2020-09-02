@@ -15,7 +15,7 @@ class TimeMachineTest extends TestCase
 
   protected function setUp()
   {
-    $this->tm = new TimeMachine();
+    $this->tm = TimeMachine::getInstance();
   }
 
   /**
