@@ -13,7 +13,7 @@ class TimeMachineTest extends TestCase
 
   public const FORMAT = 'Y-m-d H:i:s.u';
 
-  protected function setUp()
+  protected function setUp(): void
   {
     $this->tm = TimeMachine::getInstance();
   }
@@ -23,7 +23,7 @@ class TimeMachineTest extends TestCase
    */
   public function testDateFromTimestamp($ts, $date): void
   {
-    $this->assertEquals($date, TimeMachine::ts2date($ts)->format(self::FORMAT));
+    self::assertEquals($date, TimeMachine::ts2date($ts)->format(self::FORMAT));
   }
   /**
    * @dataProvider dts
@@ -31,7 +31,7 @@ class TimeMachineTest extends TestCase
   public function testTimestampFromDate($ts, $date): void
   {
     $dt = DateTime::createFromFormat(self::FORMAT, $date);
-    $this->assertEquals($ts, TimeMachine::date2ts($dt));
+    self::assertEquals($ts, TimeMachine::date2ts($dt));
   }
 
   public function dts(): array
@@ -47,25 +47,30 @@ class TimeMachineTest extends TestCase
   {
     $date = '1965-12-03 23:59:59.000000';
     $this->tm->setFrozenMode(true);
-    $this->tm->setNow(new DateTime($date));
+    /** @noinspection PhpUnhandledExceptionInspection */
+    $dt = new DateTime($date);
+    $this->tm->setNow($dt);
     usleep(100);
-    $this->assertEquals($date, $this->tm->getNow()->format(self::FORMAT));
+    self::assertEquals($date, $this->tm->getNow()->format(self::FORMAT));
   }
   public function testUnfrozenMode(): void
   {
     $date = '1965-12-03 23:59:00.000000';
     $this->tm->setFrozenMode(false);
-    $this->tm->setNow(new DateTime($date));
+    /** @noinspection PhpUnhandledExceptionInspection */
+    $dt = new DateTime($date);
+
+    $this->tm->setNow($dt);
     usleep(0); // Schedule itself takes near 50us
 
     $later = $this->tm->getNow()->format(self::FORMAT);
-    $this->assertGreaterThan($date, $later);
+    self::assertGreaterThan($date, $later);
   }
 
   public function testAkaSingletons(): void
   {
     $subj = TimeMachine::getInstance('some');
-    $this->assertSame($subj, TimeMachine::getInstance('some'));
-    $this->assertNotSame($subj, TimeMachine::getInstance('other'));
+    self::assertSame($subj, TimeMachine::getInstance('some'));
+    self::assertNotSame($subj, TimeMachine::getInstance('other'));
   }
 }
