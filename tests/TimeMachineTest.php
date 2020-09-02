@@ -15,6 +15,7 @@ class TimeMachineTest extends TestCase
 
   protected function setUp(): void
   {
+    date_default_timezone_set('UCT');
     $this->tm = TimeMachine::getInstance();
   }
 
