@@ -5,7 +5,6 @@ namespace Arth\Util;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
-use Throwable;
 
 class TimeMachine implements TimeMachineInterface
 {
@@ -72,11 +71,7 @@ class TimeMachine implements TimeMachineInterface
 
   protected function calcNow(): DateTimeInterface
   {
-    try {
-      return $this->dt ?? new DateTimeImmutable('now', $this->getTz());
-    } catch (Throwable $ex) {
-      // 'now' is valid time for constructor, so, just ignore Exception
-    }
-    return null;
+    /** @noinspection PhpUnhandledExceptionInspection */
+    return $this->dt ?? new DateTimeImmutable('now', $this->getTz());
   }
 }
